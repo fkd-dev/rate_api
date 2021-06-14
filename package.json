@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "add": "^2.0.6",
+    "google-spreadsheet": "^3.1.15",
+    "googleapis": "^76.0.0",
+    "or": "^0.2.0",
+    "yarn": "^1.22.10"
+  }
+}
