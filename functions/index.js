@@ -26,7 +26,7 @@ exports.app = functions.region('asia-northeast2').https.onRequest((req, res) => 
 			loadRateInfo(currency, rates).then(json => {
 				res.set("Access-Control-Allow-Origin", "*");
 				console.log(json);
-				res.json(json);
+				res.status(200).json(json);
 				console.log('end');
 			});
         })
