@@ -67,9 +67,9 @@ async function batchUpdateRates() {
 }
 
 function buildCurrenciesMap(array) {
-	let map = Map();
+	let map = {};
 	array.forEach((element, index) => {
-		map.set(currencies[index], element);
+		map[currencies[index]] = element;
 	});
 	return map;
 } 
