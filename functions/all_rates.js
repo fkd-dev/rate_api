@@ -1,16 +1,13 @@
 const functions = require("firebase-functions");
-const admin = require('firebase-admin');
-admin.initializeApp(functions.config().firebase);
-var firestore = admin.firestore();
+const admin = require("./firebase_init");
+const firestore = admin.app.firestore();
 
 const { GoogleSpreadsheet } = require('google-spreadsheet');
-
 const sheet_all = functions.config().google.sheet_id_all;
 const service_email = functions.config().google.service_account_email;
 const private_key = functions.config().google.private_key;
 
 const ratesOfCollectionName = 'rates';
-const rates30DaysOfCollectionName = 'rates_30days';
 const currencies = [
 	'AED','AFN','ALL','AMD','ANG','AOA','ARS','AUD','AWG','AZN','BAM','BBD','BDT','BGN','BHD','BIF','BMD','BND','BOB',
 	'BRL','BSD','BTN','BWP','BYN','BZD','CAD','CDF','CHF','CLP','CNY','COP','CRC','CUP','CVE','CZK','DJF','DKK','DOP',
@@ -21,7 +18,7 @@ const currencies = [
 	'SGD','SLL','SOS','SRD','SVC','SZL','THB','TJS','TMT','TND','TOP','TRY','TTD','TWD','TZS','UAH','UGX','USD','UYU',
 	'UZS','VES','VND','XAF','XCD','XOF','XPF','YER','ZAR','ZMW'];
 
-// asia-northeast2 is Osaka
+//	30分おきに通貨を更新する
 module.exports = functions.region('asia-northeast2').pubsub.schedule('every 30 minutes synchronized')
 	.onRun(async (context) => {
 		console.log('begin rates job');
@@ -31,6 +28,8 @@ module.exports = functions.region('asia-northeast2').pubsub.schedule('every 30 m
 	}
 )
 
+//	スプレッドシートを読み込み、最新の為替を取得
+//	全ての為替レートをFirestoreに放り込む
 async function batchUpdateRates() {
 	
 	let doc = new GoogleSpreadsheet(sheet_all);
@@ -48,6 +47,7 @@ async function batchUpdateRates() {
 	
 	const cellSize = 143;
 	let collection = firestore.collection(ratesOfCollectionName);
+	let batch = firestore.batch();
 	for (let i = 1; i <= cellSize; i++) {
 
 		const docName = sheet.getCellByA1('C' + i).value;
@@ -56,7 +56,8 @@ async function batchUpdateRates() {
 		const doc = collection.doc(docName);
 
 		let map = buildCurrenciesMap(array);
-		await doc.set(map);
+		batch.set(doc, map);
+		// await doc.set(map);
 
 		// let arrayString = '';
 		// array.forEach((element, index) => {
@@ -64,6 +65,9 @@ async function batchUpdateRates() {
 		// });
 		// console.log(currency + '\n' + arrayString + '\n');
 	}
+
+	//	一括更新
+	await batch.commit();
 }
 
 function buildCurrenciesMap(array) {
@@ -73,5 +77,3 @@ function buildCurrenciesMap(array) {
 	});
 	return map;
 } 
-
-
