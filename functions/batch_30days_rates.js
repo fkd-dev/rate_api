@@ -25,12 +25,14 @@ async function updateRates30Days() {
 	//	prepare firestore
 	let ratesCollection = firestore.collection(ratesOfCollectionName);
 	let rates30DaysCollection = firestore.collection(rates30DaysOfCollectionName);
-	let batch = firestore.batch();
+	let batches = [];
 
 	//	通貨ごとのドキュメントをループで取得、各通貨対比レートを取得して
 	//	通貨を更新する
 	for (let docName of constants.currencies) {
 		console.log(docName);
+		let batch = firestore.batch();
+		batches.push(batch);
 
 		//	ドキュメントを取得
 		const rateRef = ratesCollection.doc(docName);
@@ -42,17 +44,22 @@ async function updateRates30Days() {
 
 		if (rates.exists) {
 			let data = update30DaysRates(rates.data(), stock.data(), stock.exists);
-			await stockRef.set(data);
-			// if (stock.exists) {
-			// 	batch.update(stockRef, data);
-			// } else {
-			// 	batch.set(stockRef, data);
-			// }
+			// await stockRef.set(data).catch(error => {
+			// 	console.log(error)
+			// });
+			if (stock.exists) {
+				batch.update(stockRef, data);
+			} else {
+				batch.set(stockRef, data);
+			}
 		}
 	}
-	// await batch.commit().catch(error => {
-	// 	console.log(error);
-	// });
+	for (let batch of batches) {
+		console.log('commit batch....');
+		await batch.commit().catch(error => {
+			console.log(error);
+		});
+	}
 }
 
 function update30DaysRates(fromData, toData, existsStocks) {
@@ -83,7 +90,9 @@ function update30DaysRates(fromData, toData, existsStocks) {
 		func = function (key) {
 			console.log(key + ':' + fromData[key]);
 			data[key] = fromData[key];
-			// data[key] = [fromData[key]];
+
+			//test code
+			// data[key] = '123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789,123.456789'
 		};
 	}
 	// console.log('stock exists');
