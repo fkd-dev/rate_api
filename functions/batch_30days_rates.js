@@ -12,6 +12,7 @@ module.exports = functions
 	.region('asia-northeast2')
 	.runWith(constants.runtimeOpts)
 	.pubsub.schedule('every day 21:10')
+	.timeZone('Asia/Tokyo')
 	.onRun(async (context) => {
 		console.log('begin rates job');
 		await updateRates30Days();
