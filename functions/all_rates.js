@@ -2,6 +2,7 @@ const functions = require("firebase-functions");
 const admin = require("./firebase_init");
 const constants = require("./constants");
 const firestore = admin.app.firestore();
+const util = require("./utility");
 
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const sheet_all = functions.config().google.sheet_id_all;
@@ -9,6 +10,7 @@ const service_email = functions.config().google.service_account_email;
 const private_key = functions.config().google.private_key;
 
 const ratesOfCollectionName = 'rates';
+const currencyTotal = constants.currencies.length;
 
 //	30分おきに通貨を更新する
 module.exports = functions
@@ -38,31 +40,61 @@ async function batchUpdateRates() {
 
 	// 順番に通貨の読み込み
 	const sheet = doc.sheetsByTitle['rates'];
-	await sheet.loadCells(['A1:A143', 'C1:C143']);
+	console.log('load cells...');
+	await sheet.loadCells(['A1:A143']);
+
+	//	まずは4分待機
+	console.log('sleep in 240 sec');
+	await util.sleepSec(240);
+	console.log('load cells again...');
+	await sheet.loadCells(['A1:A143']);
+
+	//	wait while cells has error.
+	await waitWhileLoadingForGoogleFinance(sheet);
 	
-	const cellSize = 143;
+	const cellSize = currencyTotal;
 	let collection = firestore.collection(ratesOfCollectionName);
 	let batch = firestore.batch();
 	for (let i = 1; i <= cellSize; i++) {
 
-		const docName = sheet.getCellByA1('C' + i).value;
+		const docName = constants.currencies[i-1];
 		const rates = sheet.getCellByA1('A' + i).value;
 		const array = rates.split(',');
 		const doc = collection.doc(docName);
 
 		let map = buildCurrenciesMap(array);
 		batch.set(doc, map);
-		// await doc.set(map);
-
-		// let arrayString = '';
-		// array.forEach((element, index) => {
-		// 	arrayString += '      ' + currencies[index] + ':' + element + '\n';
-		// });
-		// console.log(currency + '\n' + arrayString + '\n');
 	}
 
 	//	一括更新
 	await batch.commit();
+}
+
+async function waitWhileLoadingForGoogleFinance(sheet) {
+
+	//	A1 - A143まで作成
+	var arr = Array(currencyTotal).fill().map((_,i) => `A${i+1}`);
+
+	const word = ',0,';
+	for (let loop = 0; loop < 20; loop++) {
+		
+		//	セル内で関数がエラーを返しているかチェック。
+		arr = arr.filter(A1 => {
+			const rates = sheet.getCellByA1(A1).value;
+			const wordCount = util.countWord(rates, word)
+			console.log(`,0, is ${wordCount}`);
+			return wordCount <= 1;
+		});
+		console.log(`array size: ${arr.length}`);
+		if (arr.length == currencyTotal) {
+			console.log('all cells has no error.')
+			break;
+		}
+
+		//	エラーが発生していたら処理を中止して10秒待機
+		console.log('sleep while 10sec')
+		await util.sleepSec(10);
+	}
 }
 
 function buildCurrenciesMap(array) {
