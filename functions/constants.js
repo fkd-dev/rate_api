@@ -11,7 +11,7 @@ const currencies = [
 
 const runtimeOpts = {
 	timeoutSeconds: 540,
-	memory: '256 MB'
+	memory: '256MB'
 }
 
 module.exports = {
