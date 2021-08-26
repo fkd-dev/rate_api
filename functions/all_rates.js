@@ -82,7 +82,7 @@ async function waitWhileLoadingForGoogleFinance(sheet) {
 		arr = arr.filter(A1 => {
 			const rates = sheet.getCellByA1(A1).value;
 			const wordCount = util.countWord(rates, word)
-			console.log(`,0, is ${wordCount}`);
+			// console.log(`,0, is ${wordCount}`);
 			return wordCount <= 1;
 		});
 		console.log(`array size: ${arr.length}`);
