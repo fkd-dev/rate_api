@@ -51,11 +51,11 @@ async function loadRateInfo(currency) {
 
 	// シート読み込み＆対象通貨読み込み
 	const sheet = doc.sheetsByTitle['RATE'];
-	await sheet.loadCells(['B2:B144', 'C2:C144']);
+	await sheet.loadCells(['B1:B143', 'C1:C143']);
 	
 	let result = {};
 	//	XXXAAA形式の2カ国通貨コードのセルを一つづつ読み込み、リクエストされた取得対象のレートであれば連想配列に追加する
-	for (let i = 2; i <= 144; i++) {
+	for (let i = 1; i <= 143; i++) {
 		let key = 'B' + i;
 		const target = sheet.getCellByA1(key).value;
 		
