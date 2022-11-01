@@ -7,7 +7,7 @@ const userDevicesCollectionName = 'user_devices';
 const day = 3600 * 24 * 1000;
 
 //asia-northeast2 is Osaka
-module.exports = functions.region('asia-northeast2').https.onRequest((req, res) => {
+module.exports = functions.region('asia-northeast2').runWith({enforceAppCheck: true}).https.onRequest((req, res) => {
     cors(req, res, () => {
 
         if (req.app == undefined) {
