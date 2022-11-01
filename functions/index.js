@@ -12,3 +12,6 @@ if (!process.env.FUNCTION_NAME || process.env.FUNCTION_NAME === 'all_rates') {
 if (!process.env.FUNCTION_NAME || process.env.FUNCTION_NAME === 'batch_30days_rates') {
     exports.batch_30days_rates	= require('./batch_30days_rates');
 }
+if (!process.env.FUNCTION_NAME || process.env.FUNCTION_NAME === 'change_currency') {
+    exports.change_currency	= require('./change_currency');
+}

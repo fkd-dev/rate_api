@@ -3,12 +3,8 @@
     "public": "public",
     "rewrites": [
       {
-        "source": "/test",
-        "function": "test"
-      },
-      {
-        "source": "/rates",
-        "function": "rates"
+        "source": "/change_currency",
+        "function": "change_currency"
       }
     ],
     "ignore": [
