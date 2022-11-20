@@ -1,35 +1,28 @@
 const functions = require("firebase-functions");
 const admin = require("./firebase_init");
 const firestore = admin.app.firestore();
-const cors = require('cors')({origin: true});
 
 const userDevicesCollectionName = 'user_devices';
 const day = 3600 * 24 * 1000;
 
 //asia-northeast2 is Osaka
-module.exports = functions.region('asia-northeast2').runWith({enforceAppCheck: true}).https.onRequest((req, res) => {
-    cors(req, res, () => {
+module.exports = functions
+    .region('asia-northeast2')
+    .runWith({enforceAppCheck: true}).https.onCall(async (data, context) => {
 
-        if (req.app == undefined) {
-            throw new functions.https.HttpsError(
-                'failed-precondition',
-                'The function must be called from an App Check verified app.');
-        }
-        
-        if (req.method !== 'POST') {
-            return res.status(400).send("error! this endpoint allows the post method only.");
-        }
-        const uid = req.body.uid;
-        if (!uid) {
-            return res.status(400).send("error!");
-        }
-        getCurrencyChangeable(uid).then(result => {
-            res.set("Access-Control-Allow-Origin", "*");
-            console.log(result);
-            res.status(200).json(result);
-            console.log('end');
-        });
-    })
+    if (context.app == undefined) {
+        throw new functions.https.HttpsError(
+            'failed-precondition',
+            'The function must be called from an App Check verified app.');
+    }
+    const uid = data.uid;
+    if (!uid || !(typeof uid === 'string') || uid.length === 0) {
+        throw new functions.https.HttpsError('invalid-arguments','uid is invalid');
+    }
+    const result = await getCurrencyChangeable(uid);
+    return {
+        canChange : result
+    }
 })
 
 async function getCurrencyChangeable(uuid) {
