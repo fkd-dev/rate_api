@@ -29,8 +29,7 @@ async function getCurrencyChangeable(uuid) {
 
     const usersCollection = firestore.collection(userDevicesCollectionName);
     const userCountRef = usersCollection.doc(uuid);
-    const d = new Date();
-    const now = d.getMilliseconds();
+    const now = Date().now();
     const doc = await userCountRef.get();
     if (!doc.exists) {
         userCountRef.set({
@@ -42,7 +41,8 @@ async function getCurrencyChangeable(uuid) {
 
     const date = doc.get("date");
     const count = doc.get("count");
-    if (date + day < now) {
+    const nextLimitTime = date + day;
+    if (now > nextLimitTime) {
         //  24時間経過しているので、更新する
         userCountRef.update({
             count: 1,
@@ -51,9 +51,10 @@ async function getCurrencyChangeable(uuid) {
         return true;
     }
     if (count < 5) {
+        //  5回以内なので有効
         userCountRef.update({
             count: count + 1,
-            date: date
+            date: date  //次回更新日は更新しない
         });
         return true;
     }
