@@ -16,7 +16,7 @@ const currencyTotal = constants.currencies.length;
 module.exports = functions
 	.region('asia-northeast2')
 	.runWith(constants.runtimeOpts)
-	.pubsub.schedule('every 30 minutes synchronized')
+	.pubsub.schedule('every 60 minutes synchronized')
 	.onRun(async (context) => {
 		console.log('begin rates job');
 		await batchUpdateRates();
